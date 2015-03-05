@@ -2,45 +2,69 @@ window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndex
 window.IDBTransaction = window.webkitIDBTransaction || window.IDBTransaction || window.msIDBTransaction,
 window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 
-var initObject = {
+/**
+* Exmaple Object for Initialization   
+{
     "dbName":"MyDB",
     "version":1,
-    "objectStores":[
+    "objectStores": [
 	{
 	    "name":"MyStore",
-	    "objectStoreConfig":{"keyPath":"id","autoIncrement":false},
+	    "objectStoreConfig": {
+		"keyPath":"id",
+		"autoIncrement":false
+	    },
 	    "indices":[
-		{"indexName":"name","unique":false},
-		{"indexName":"title","unique":true}
+		{
+		    "indexName":"name",
+		    "unique":false
+		},
+		{
+		    "indexName":"title",
+		    "unique":true
+		}
 	    ]
 	},
-	{  "name":"YourStore",
-	    "objectStoreConfig":{"keyPath":"isbn","autoIncrement":false},
+	{
+	    "name":"YourStore",
+	    "objectStoreConfig":{
+		"keyPath":"isbn",
+		"autoIncrement":false
+	    },
 	    "indices":[
-		{"indexName":"author","unique":false},
-		{"indexName":"title","unique":true}
+		{
+		    "indexName":"author",
+		    "unique":false
+		},
+		{
+		    "indexName":"title",
+		    "unique":true
+		}
 	    ]
 	}
     ]
 };
 
-var upgradeObject = {
+* Example Object for Updatition
+
+{
     "dbName":"MyDB",
     "version":2,
     "objectStores":[
 	{
 	    "name":"ProductStore",
-	    "objectStoreConfig":{"keyPath":"productID","autoIncrement":false},
+	    "objectStoreConfig":{
+		"keyPath":"productID","autoIncrement":false},
 	    "indices":[
 		{"indexName":"productName","unique":false},
 		{"indexName":"price","unique":true}
 	    ]
 	}
     ]
-};
+}
 
-
-var degradeObject = {
+* Example for Degrading Object
+{
     "dbName":"MyDB",
     "version":3,
     "objectStores":[
@@ -53,22 +77,27 @@ var degradeObject = {
 	    ]
 	}
     ]
-};
-var sampleData_MyStore = [
+}
+
+* Example data for MyStore Data
+[
     {"id":1,"name":"Subhash","title":"Mr"},
     {"id":2,"name":"Shruthi","title":"Mrs"}
-];
+]
 
-var sampleData_YourStore = [
+* Example data for YourStore
+[
     {"isbn":"100","author":"Ernest Hemmingway","title":"Old Man and the Sea"},
     {"isbn":"101","author":"Mark Twain","title":"Tom Sawyer"}
-];
+]
 
-var sampleData_ProductStore = [
+*Example data for ProductStore
+[
     {"productID":10,"productName":"Bing","price":"Free","company":"MSFT"}
-];
+]
 
-var createDB = function(initObj) {
+**/
+var DB = function(initialConfig) {
     var DB;
     var error = function(e) {
 	console.log(e);
@@ -80,7 +109,7 @@ var createDB = function(initObj) {
     },
     upgradeneeded = function(e) {
 	DB = e.target.result;
-	var objStores = initObj.objectStores;
+	var objStores = initialConfig.objectStores;
 	objStores.map(function(o) {
 	    oStore = DB.createObjectStore(o.name,o.objectStoreConfig);
 	    o.indices.map(function(index){
@@ -95,9 +124,19 @@ var createDB = function(initObj) {
 	request.onsuccess = success;
 	request.onupgradeneeded = upgradeneeded;
     };
-    var DBName = initObject.dbName;
-    var DBVersion = initObject.version;
+    var mergeObjects = function(oldobject,newobject) {
+	var keys = Object.keys(newobject);
+	keys.map(function(k){
+	    oldobject[k] = newobject[k];
+	});
+	return oldobject;
+    };
+
+    var DBName = initialConfig.dbName;
+    var DBVersion = initialConfig.version;
+
     openConnection(DBName,DBVersion);
+
     return {
 	addData: function(storeName,data) {
 	    var store = DB.transaction(storeName,"readwrite").objectStore(storeName);
@@ -183,11 +222,46 @@ var createDB = function(initObj) {
 	    };
 	    return this;
 	},
+	update: function (store, key, object) {
+	    var transaction = DB.transaction(store,"readwrite");
+	    var oStore = transaction.objectStore(store);
+	    var request = oStore.get(key);
+	    request.onerror = function(e){
+		console.log("error in getting data using key");
+	    };
+	    request.onsuccess = function(e){
+		var obj = request.result;
+		obj = mergeObjects(obj,object);
+		var updateReq = oStore.put((obj));
+		updateReq.onerror = function(e) {
+		    console.log("error updating data");
+		};
+		updateReq.onsuccess = function(e) {
+		    console.log("data updated");
+		};
+	    };
+	},
+	getCursor: function (store,operation) {
+	    var transaction = DB.transaction(store);
+	    var oStore = transaction.objectStore(store);
+	    var cursorRequest = oStore.openCursor();
+	    cursorRequest.onerror = function(e) {
+		console.log("unable to create cursor");
+	    };
+	    cursorRequest.onsuccess = function(e) {
+		var cursor = e.target.result;
+		if(cursor) {
+		    operation(cursor);
+		}
+		else {
+		    console.log("cursor is not available");
+		}
+	    };
+	},
 	releaseDB: function() {
 	    DB.close();
 	    window.indexedDB.deleteDatabase(DBName);
-	}
-		    
+	}		    
     };
 }
 

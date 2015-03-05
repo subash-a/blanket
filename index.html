@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <title> BlanketJS </title>
+  </head>
+  <body>
+    <script src="blanket.js"></script>
+    <script>
+      var tableMyStore =       {
+      "name":"MyStore",
+      "objectStoreConfig":{"keyPath":"id","autoIncrement":false},
+      "indices":[
+      {"indexName":"name","unique":false},
+      {"indexName":"title","unique":true}
+      ]
+      };
+      
+      var tableYourStore =       {  "name":"YourStore",
+      "objectStoreConfig":{"keyPath":"isbn","autoIncrement":false},
+      "indices":[
+      {"indexName":"author","unique":false},
+      {"indexName":"title","unique":true}
+      ]
+      };
+
+      var initObject = {
+      "dbName":"MyDB",
+      "version":1,
+      "objectStores":[
+      tableMyStore,
+      tableYourStore
+      ]
+      };
+
+      var tableProductStore =       {
+      "name":"ProductStore",
+      "objectStoreConfig":{"keyPath":"productID","autoIncrement":false},
+      "indices":[
+      {"indexName":"productName","unique":false},
+      {"indexName":"price","unique":true}
+      ]
+      };
+
+      var upgradeObject = {
+      "dbName":"MyDB",
+      "version":2,
+      "objectStores":[
+      tableProductStore
+      ]
+      };
+
+
+      var degradeObject = {
+      "dbName":"MyDB",
+      "version":3,
+      "objectStores":[
+      tableProductStore
+      ]
+      };
+      var sampleData_MyStore = [
+      {"id":1,"name":"Subhash","title":"Mr"},
+      {"id":2,"name":"Shruthi","title":"Mrs"}
+      ];
+
+      var sampleData_YourStore = [
+      {"isbn":"100","author":"Ernest Hemmingway","title":"Old Man and the Sea"},
+      {"isbn":"101","author":"Mark Twain","title":"Tom Sawyer"}
+      ];
+
+      var sampleData_ProductStore = [
+      {"productID":10,"productName":"Bing","price":"Free","company":"MSFT"}
+      ];
+
+
+      (function () {
+      db = DB(initObject);
+      db.addData('MyStore',sampleData_MyStore);
+      })();
+    </script>
+  </body>

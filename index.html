@@ -73,8 +73,14 @@
 
 
       (function () {
-      db = DB(initObject);
-      db.addData('MyStore',sampleData_MyStore);
+      db = IDB(initObject)
+      .then(function(e){
+      console.log(e)
+      })
+      .catch(function(e){
+      console.log(e)
+      });
+      //db.addData('MyStore',sampleData_MyStore);
       })();
     </script>
   </body>

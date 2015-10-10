@@ -3,7 +3,7 @@ window.IDBTransaction = window.webkitIDBTransaction || window.IDBTransaction || 
 window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 
 /**
-* Exmaple Object for Initialization   
+* Exmaple Object for Initialization
 {
     "dbName":"MyDB",
     "version":1,
@@ -97,6 +97,24 @@ window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.ms
 ]
 
 **/
+var IDB = function(initialConfig) {
+    var IDB;
+    var promise = new Promise(function(resolve, reject){
+	var request = window.indexedDB.open(initialConfig.DBName, initialConfig.DBVersion);
+	request.onerror = function(e) {
+	    reject(e);
+	}
+	request.onsuccess = function(e) {
+	    resolve(this);
+	};
+	request.onupgradeneeded = function(e) {
+		// Promise should not be resolved here since this is still running
+		// a versionchange transaction.
+	};
+    });
+    return promise;
+}
+
 var DB = function(initialConfig) {
     var DB;
     var error = function(e) {
@@ -261,7 +279,6 @@ var DB = function(initialConfig) {
 	releaseDB: function() {
 	    DB.close();
 	    window.indexedDB.deleteDatabase(DBName);
-	}		    
+	}
     };
 }
-
